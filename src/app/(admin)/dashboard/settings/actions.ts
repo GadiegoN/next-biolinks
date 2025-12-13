@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 const updateSchema = z.object({
+  name: z.string().min(2, "Nome muito curto").optional(),
   title: z.string().min(3).optional(),
   description: z.string().optional(),
   whatsapp: z.string().min(10).optional(),
@@ -21,6 +22,13 @@ export async function updatePageProfile(data: z.infer<typeof updateSchema>) {
   if (!user) return { error: "Não autorizado" };
 
   try {
+    if (data.name) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { name: data.name },
+      });
+    }
+
     await prisma.page.update({
       where: { userId: user.id },
       data: {

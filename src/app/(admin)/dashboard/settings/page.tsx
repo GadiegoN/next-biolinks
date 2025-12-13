@@ -14,11 +14,15 @@ export default async function SettingsPage() {
 
   if (!user) redirect("/login");
 
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+  });
+
   const userPage = await prisma.page.findUnique({
     where: { userId: user.id },
   });
 
-  if (!userPage) redirect("/dashboard");
+  if (!userPage || !dbUser) redirect("/dashboard");
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -32,7 +36,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="grid gap-8">
-        <ProfileForm initialData={userPage} />
+        <ProfileForm initialData={userPage} userName={dbUser.name || ""} />
       </div>
     </div>
   );

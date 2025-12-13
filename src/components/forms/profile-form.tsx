@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,9 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Loader2, Save } from "lucide-react";
 import { updatePageProfile } from "@/app/(admin)/dashboard/settings/actions";
-import { createClient } from "@/lib/supabase/client";
 
 interface ProfileFormProps {
+  userName: string;
   initialData: {
     title: string;
     description: string | null;
@@ -21,11 +22,12 @@ interface ProfileFormProps {
   };
 }
 
-export function ProfileForm({ initialData }: ProfileFormProps) {
+export function ProfileForm({ initialData, userName }: ProfileFormProps) {
   const [uploading, setUploading] = useState(false);
 
   const form = useForm({
     defaultValues: {
+      name: userName,
       title: initialData.title,
       description: initialData.description || "",
       whatsapp: initialData.whatsapp,
@@ -50,7 +52,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError } = await (await supabase).storage
+      const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(filePath, file);
 
@@ -58,7 +60,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
       const {
         data: { publicUrl },
-      } = (await supabase).storage.from("avatars").getPublicUrl(filePath);
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       form.setValue("avatarUrl", publicUrl);
       toast.success("Imagem carregada! Clique em Salvar para confirmar.");
@@ -83,9 +85,8 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* AREA DE UPLOAD */}
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-full border-2 border-dashed border-zinc-300 flex items-center justify-center overflow-hidden bg-zinc-50 relative">
+          <div className="flex items-center gap-6 pb-6 border-b border-zinc-100 dark:border-zinc-800">
+            <div className="w-24 h-24 rounded-full border-2 border-dashed border-zinc-300 flex items-center justify-center overflow-hidden bg-zinc-50 relative shrink-0">
               {form.watch("avatarUrl") ? (
                 <img
                   src={form.watch("avatarUrl")!}
@@ -98,7 +99,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="avatar">Logo ou Foto</Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Input
                   id="avatar"
                   type="file"
@@ -107,7 +108,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
                   onChange={handleImageUpload}
                   disabled={uploading}
                 />
-                {uploading && <Loader2 className="animate-spin mt-2" />}
+                {uploading && <Loader2 className="animate-spin" />}
               </div>
               <p className="text-xs text-muted-foreground">
                 Recomendado: 400x400px (Max 2MB)
@@ -115,9 +116,19 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
             </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label>Nome do Negócio</Label>
-            <Input {...form.register("title")} />
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Seu Nome (Pessoal)</Label>
+              <Input {...form.register("name")} placeholder="Ex: João Silva" />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Nome do Negócio</Label>
+              <Input
+                {...form.register("title")}
+                placeholder="Ex: Barbearia do João"
+              />
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -136,6 +147,7 @@ export function ProfileForm({ initialData }: ProfileFormProps) {
           <Button
             type="submit"
             disabled={form.formState.isSubmitting || uploading}
+            className="w-full md:w-auto"
           >
             <Save className="w-4 h-4 mr-2" />
             Salvar Alterações
