@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id    String  @id @default(cuid())
+  email String  @unique
+  name  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  planStatus    PlanStatus @default(FREE)
+  planExpiresAt DateTime?
+
+  page     Page?
+  payments Payment[]
+}
+
+model Page {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  published Boolean @default(true)
+
+  title       String
+  description String?
+  metaTitle   String?
+  metaDesc    String?
+  avatarUrl   String?
+
+  whatsapp String
+
+  themeConfig Json? @default("{}")
+
+  socialLinks Json? @default("{}")
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links  Link[]
+
+  totalViews Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Link {
+  id String @id @default(cuid())
+
+  title    String
+  subtitle String?
+  imageUrl String?
+
+  type LinkType @default(LINK)
+
+  url   String?
+  price Decimal?
+
+  isActive      Boolean @default(true)
+  order         Int     @default(0)
+  isHighlighted Boolean @default(false)
+
+  clicks Int @default(0)
+
+  pageId String
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id         String        @id @default(cuid())
+  externalId String        @unique
+  amount     Decimal
+  status     PaymentStatus @default(PENDING)
+  provider   String        @default("MERCADO_PAGO")
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+enum PlanStatus {
+  FREE
+  LIFETIME
+  MONTHLY
+}
+
+enum LinkType {
+  LINK
+  WHATSAPP_PRODUCT
+  HEADER
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  FAILED
+  REFUNDED
+}
