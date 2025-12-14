@@ -13,12 +13,14 @@ export async function login(formData: FormData) {
     redirect("/error");
   }
 
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_BASE_URL || "https://next-biolinks.vercel.app"
+  ).replace(/\/$/, "");
+
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${
-        process.env.NEXT_PUBLIC_BASE_URL || "https://next-biolinks.vercel.app/"
-      }/auth/callback`,
+      emailRedirectTo: `${baseUrl}/auth/callback`,
     },
   });
 
