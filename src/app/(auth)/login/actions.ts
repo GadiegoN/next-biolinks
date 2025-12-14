@@ -17,7 +17,7 @@ export async function login(formData: FormData) {
     email,
     options: {
       emailRedirectTo: `${
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+        process.env.NEXT_PUBLIC_BASE_URL || "https://next-biolinks.vercel.app/"
       }/auth/callback`,
     },
   });
