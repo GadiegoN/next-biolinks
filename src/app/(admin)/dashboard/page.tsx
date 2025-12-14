@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { UpgradeButton } from "@/components/client/upgrade-button";
 
 export default async function Dashboard() {
   const supabase = await createClient();
@@ -157,7 +158,7 @@ export default async function Dashboard() {
                 <CardContent className="space-y-4">
                   <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-lg font-mono text-sm flex items-center justify-between">
                     <span className="truncate">
-                      biolinks.com/{userPage.slug}
+                      next-biolinks.vercel.app/{userPage.slug}
                     </span>
                     <Link href={`/${userPage.slug}`} target="_blank">
                       <ExternalLink className="w-4 h-4 text-zinc-500 hover:text-emerald-600 cursor-pointer" />
@@ -173,6 +174,7 @@ export default async function Dashboard() {
                       <Button variant="outline">Ver Site</Button>
                     </Link>
                   </div>
+                  <UpgradeButton />
                 </CardContent>
               </Card>
 
