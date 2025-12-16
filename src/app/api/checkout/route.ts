@@ -33,7 +33,7 @@ export async function POST(request: Request) {
         items: [
           {
             id: "plano-pro",
-            title: "BioLinks Pro (3 meses)",
+            title: "BioLinks Pro (Acesso 3 meses)",
             quantity: 1,
             unit_price: 49.9,
             currency_id: "BRL",

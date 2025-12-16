@@ -14,16 +14,33 @@ export async function createLink(data: z.infer<typeof linkSchema>) {
 
   if (!user) return { error: "Não autorizado" };
 
-  const page = await prisma.page.findUnique({
-    where: { userId: user.id },
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: {
+      page: {
+        include: {
+          links: true,
+        },
+      },
+    },
   });
 
-  if (!page) return { error: "Página não encontrada" };
+  if (!dbUser?.page) return { error: "Página não encontrada" };
+
+  const isPro = dbUser.planStatus === "LIFETIME";
+  const currentLinks = dbUser.page.links.length;
+  const MAX_FREE_LINKS = 5;
+
+  if (!isPro && currentLinks >= MAX_FREE_LINKS) {
+    return {
+      error: "Limite atingido! Faça o upgrade para criar links ilimitados.",
+    };
+  }
 
   try {
     await prisma.link.create({
       data: {
-        pageId: page.id,
+        pageId: dbUser.page.id,
         title: data.title,
         url: data.url || null,
         price: data.price || null,
