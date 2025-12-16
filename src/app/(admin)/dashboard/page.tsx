@@ -33,6 +33,13 @@ export default async function Dashboard() {
 
   let dbUser = await prisma.user.findUnique({
     where: { email: supabaseUser.email! },
+    include: {
+      payments: {
+        where: { status: "APPROVED" },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
   });
 
   if (!dbUser) {
@@ -42,6 +49,7 @@ export default async function Dashboard() {
         email: supabaseUser.email!,
         name: supabaseUser.user_metadata.full_name || "Empreendedor",
       },
+      include: { payments: true },
     });
   }
 
@@ -49,6 +57,24 @@ export default async function Dashboard() {
     where: { userId: dbUser.id },
     include: { links: true },
   });
+
+  let isPro = false;
+  let expiresAt: Date | null = null;
+
+  if (dbUser.planStatus === "LIFETIME") {
+    const lastPayment = dbUser.payments[0];
+    if (lastPayment) {
+      const paymentDate = new Date(lastPayment.createdAt);
+      expiresAt = new Date(paymentDate);
+      expiresAt.setMonth(expiresAt.getMonth() + 3);
+
+      if (new Date() < expiresAt) {
+        isPro = true;
+      }
+    } else {
+      isPro = true;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950">
@@ -137,20 +163,18 @@ export default async function Dashboard() {
                 <CardContent>
                   <div className="flex items-center gap-2">
                     <div className="text-2xl font-bold text-emerald-600">
-                      {dbUser.planStatus === "FREE"
-                        ? "Gratuito"
-                        : "Pro / Vitalício"}
+                      {isPro ? "Pro (3 Meses)" : "Gratuito"}
                     </div>
-                    {dbUser.planStatus !== "FREE" && (
+                    {isPro && (
                       <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-bold">
                         ATIVO
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {dbUser.planStatus === "FREE"
-                      ? "Upgrade para remover limites"
-                      : "Você tem acesso total a todas as ferramentas."}
+                    {isPro && expiresAt
+                      ? `Expira em: ${expiresAt.toLocaleDateString("pt-BR")}`
+                      : "Upgrade para remover limites"}
                   </p>
                 </CardContent>
               </Card>
@@ -184,7 +208,7 @@ export default async function Dashboard() {
                     </Link>
                   </div>
 
-                  {dbUser.planStatus === "FREE" && <UpgradeButton />}
+                  {!isPro && <UpgradeButton />}
                 </CardContent>
               </Card>
 
