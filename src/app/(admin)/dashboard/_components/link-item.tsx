@@ -111,7 +111,7 @@ export function LinkItem({ link }: LinkItemProps) {
           />
         </div>
 
-        <Separator />
+        <div className="h-8 w-px bg-border mx-1" />
 
         <Button
           variant="ghost"
