@@ -78,3 +78,30 @@ export async function deleteLink(linkId: string) {
   revalidatePath("/dashboard/links");
   return { success: true };
 }
+
+export async function toggleLinkStatus(linkId: string, isActive: boolean) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Não autorizado" };
+
+  try {
+    await prisma.link.update({
+      where: {
+        id: linkId,
+        page: { userId: user.id },
+      },
+      data: {
+        isActive: isActive,
+      },
+    });
+
+    revalidatePath("/dashboard/links");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Erro ao atualizar status" };
+  }
+}

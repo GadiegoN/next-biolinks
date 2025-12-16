@@ -1,9 +1,13 @@
 "use client";
 
+import { useTransition } from "react";
 import { Trash2, ExternalLink, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { deleteLink } from "../links/actions";
+import { deleteLink, toggleLinkStatus } from "../links/actions";
+import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 type LinkItemProps = {
   link: {
@@ -12,10 +16,13 @@ type LinkItemProps = {
     url: string | null;
     price: number | null;
     clicks: number;
+    isActive: boolean;
   };
 };
 
 export function LinkItem({ link }: LinkItemProps) {
+  const [isPending, startTransition] = useTransition();
+
   async function handleDelete() {
     if (!confirm("Tem certeza que deseja apagar este item?")) return;
 
@@ -24,21 +31,63 @@ export function LinkItem({ link }: LinkItemProps) {
     else toast.success("Item removido");
   }
 
+  function handleToggle(checked: boolean) {
+    startTransition(async () => {
+      const res = await toggleLinkStatus(link.id, checked);
+      if (res?.error) {
+        toast.error(res.error);
+      }
+    });
+  }
+
   return (
-    <div className="flex items-center justify-between p-4 border rounded-lg bg-card mb-3 hover:shadow-md transition-all">
+    <div
+      className={cn(
+        "flex items-center justify-between p-4 border rounded-lg bg-card mb-3 hover:shadow-md transition-all",
+        !link.isActive && "opacity-60 bg-zinc-50 dark:bg-zinc-900 border-dashed"
+      )}
+    >
       <div className="flex items-center gap-4">
-        <div className="p-2 bg-muted rounded-full">
+        <div
+          className={cn(
+            "p-2 rounded-full",
+            !link.isActive ? "bg-zinc-200 dark:bg-zinc-800" : "bg-muted"
+          )}
+        >
           {link.price ? (
-            <ShoppingBag className="w-5 h-5 text-emerald-600" />
+            <ShoppingBag
+              className={cn(
+                "w-5 h-5",
+                link.isActive ? "text-emerald-600" : "text-zinc-400"
+              )}
+            />
           ) : (
-            <ExternalLink className="w-5 h-5 text-blue-500" />
+            <ExternalLink
+              className={cn(
+                "w-5 h-5",
+                link.isActive ? "text-blue-500" : "text-zinc-400"
+              )}
+            />
           )}
         </div>
+
         <div>
-          <h4 className="font-semibold">{link.title}</h4>
+          <h4
+            className={cn(
+              "font-semibold",
+              !link.isActive && "line-through text-muted-foreground"
+            )}
+          >
+            {link.title}
+          </h4>
           <div className="text-sm text-muted-foreground flex gap-3">
             {link.price && (
-              <span className="text-emerald-600 font-medium">
+              <span
+                className={cn(
+                  "font-medium",
+                  link.isActive ? "text-emerald-600" : "text-zinc-500"
+                )}
+              >
                 R$ {Number(link.price).toFixed(2)}
               </span>
             )}
@@ -50,14 +99,29 @@ export function LinkItem({ link }: LinkItemProps) {
         </div>
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={handleDelete}
-        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-      >
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground hidden sm:block">
+            {link.isActive ? "Ativo" : "Oculto"}
+          </span>
+          <Switch
+            checked={link.isActive}
+            onCheckedChange={handleToggle}
+            disabled={isPending}
+          />
+        </div>
+
+        <Separator />
+
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDelete}
+          className="text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
     </div>
   );
 }
