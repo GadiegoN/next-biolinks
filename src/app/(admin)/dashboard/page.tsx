@@ -135,13 +135,22 @@ export default async function Dashboard() {
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {dbUser.planStatus === "FREE" ? "Gratuito" : "Pro"}
+                  <div className="flex items-center gap-2">
+                    <div className="text-2xl font-bold text-emerald-600">
+                      {dbUser.planStatus === "FREE"
+                        ? "Gratuito"
+                        : "Pro / Vitalício"}
+                    </div>
+                    {dbUser.planStatus !== "FREE" && (
+                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-bold">
+                        ATIVO
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-1">
                     {dbUser.planStatus === "FREE"
-                      ? "Upgrade para remover anúncios"
-                      : "Tudo liberado"}
+                      ? "Upgrade para remover limites"
+                      : "Você tem acesso total a todas as ferramentas."}
                   </p>
                 </CardContent>
               </Card>
@@ -174,7 +183,8 @@ export default async function Dashboard() {
                       <Button variant="outline">Ver Site</Button>
                     </Link>
                   </div>
-                  <UpgradeButton />
+
+                  {dbUser.planStatus === "FREE" && <UpgradeButton />}
                 </CardContent>
               </Card>
 
